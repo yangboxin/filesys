@@ -4,3 +4,16 @@
 值得注意的是，在flash文件系统的架构中，底层 flash 设备分配块、地址转换、磨损均衡和垃圾收集等都是在FTL（Flash Translation Layer）中完成，在我的理解中，这一层主要是因为ssd和传统的磁盘有很多不同的点，比如：写入之前要先擦除、NAND flash设备的写入擦除次数有限等等，所以需要在文件系统和存储实体之间有一个磁盘管理软件抽象层，方便使用。
 #
 f2fs文件系统（flash friendly file system），是专门针对ssd闪存特性设计的文件系统，从其名字中也可见一斑，它是一种LFS（Log-Structured File System），这种文件系统（LFS）的特性是out-place更新和顺序写入，但存在Wandering Tree、没有对数据进行分类等问题，f2fs通过引入NAT（Node Address Table)和冷热数据分离很好的解决了雪崩问题和垃圾回收的开销问题，但其仍存在一定不足，如：数据的冷热分离还比较简单，仅仅通过数据的类型（是否为目录、文件或多媒体文件等）来分类，可以结合实际的应用场景进行一定的优化和改良，这也是我们本次研究中希望解决的一个问题。
+
+# 7/13
+为了减少垃圾回收的开销，f2fs采用了多日志头的记录方式实现冷热数据分离，具体分类如下：
+
+在f2fs文件系统中，冷热数据具体分为六类（默认），分别是hot、warm、cold的node和hot、warm、cold的data。hot node主要是目录的inode、直接索引，warm node是文件的inode、直接索引，cold node是间接索引块（用于地址映射转换）；hot data是目录数据块，warm data是文件数据块，cold data则是多媒体文件或者被垃圾回收的块。
+
+在挂载时，可以选择2、4、6三种不同的冷热数据分块（using mount option such as active_logs=x），在实现的代码中通过一个enum类型来指定具体数据块或节点块的冷热程度。
+
+通过以上标准进行冷热分离可以使得各个区域数据更新的频率接近，存储空间中各个segment的有效块（valid block）数量接近二项分布（即：冷数据大多保持有效而无需搬移，热数据大多更新后处于无效状态，只需少量搬移）。
+
+引用技术博客中的一张图片来说明为何分类数据并分区域存放可以减少垃圾回收的开销
+![image](https://user-images.githubusercontent.com/55615299/178775237-8f386b64-a88f-43cc-80ed-225e4655d75c.png)
+node block与data block分离, 冷热数据分离，将不同数据存放到不同的zone中，有利于FTL进行GC垃圾回收，如上图，假设zone对应flash中的一个block，则zone-aware allocation可以做到冷热数据分配到不同的zone，也就分配到不同的flash block中
