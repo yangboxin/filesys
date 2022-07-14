@@ -17,3 +17,6 @@ f2fs文件系统（flash friendly file system），是专门针对ssd闪存特�
 引用技术博客中的一张图片来说明为何分类数据并分区域存放可以减少垃圾回收的开销
 ![image](https://user-images.githubusercontent.com/55615299/178775237-8f386b64-a88f-43cc-80ed-225e4655d75c.png)
 node block与data block分离, 冷热数据分离，将不同数据存放到不同的zone中，有利于FTL进行GC垃圾回收，如上图，假设zone对应flash中的一个block，则zone-aware allocation可以做到冷热数据分配到不同的zone，也就分配到不同的flash block中
+
+# 7/14
+下载f2fs-tools并在本地编译成功，准备进一步的代码阅读、优化等工作，并上传至仓库。
