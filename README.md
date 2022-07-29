@@ -44,3 +44,27 @@ mount -t f2fs /dev/loop0 /mnt/f2fs
 挂载到系统中
 
 可以在/mnt/f2fs中使用touch、mkdir等操作
+
+# 7/26
+查看f2fs文件系统元数据区域数据的方法：
+首先制作f2fs镜像：
+dd if=dev/loop0 of=mirror.img
+
+使用dump.f2fs命令查看元数据内容
+Usage: dump.f2fs [options] device
+[options]:
+  -d debug level [default:0]
+  -i inode no (hex)
+  -n [NAT dump nid from #1~#2 (decimal), for all 0~-1]
+  -M show a block map
+  -s [SIT dump segno from #1~#2 (decimal), for all 0~-1]
+  -S sparse_mode
+  -a [SSA dump segno from #1~#2 (decimal), for all 0~-1]
+  -b blk_addr (in 4KB)
+  -V print the version number and exit
+
+举例如NAT：
+dump.f2fs -n 0~-1 mirror.img
+
+cat dump_nat
+
