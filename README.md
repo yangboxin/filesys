@@ -71,3 +71,4 @@ cat dump_nat
 # 7/27
 查看checkpoint、superblock等元数据：
 fsck.f2fs -l mirror.img
+![无标题](https://user-images.githubusercontent.com/55615299/181905867-bc1d2c9c-aa08-4d32-916d-ea92b14c21f0.png)
