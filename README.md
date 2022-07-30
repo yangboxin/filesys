@@ -68,3 +68,6 @@ dump.f2fs -n 0~-1 mirror.img
 
 cat dump_nat
 
+# 7/27
+查看checkpoint、superblock等元数据：
+fsck.f2fs -l mirror.img
