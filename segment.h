@@ -358,6 +358,40 @@ static inline unsigned int get_valid_blocks(struct f2fs_sb_info *sbi,
 		return get_seg_entry(sbi, segno)->valid_blocks;
 }
 
+static inline unsigned int get_valid_time_blocks(struct f2fs_sb_info *sbi,
+				unsigned int segno)
+{
+	struct sit_info *sit_i = SIT_I(sbi);
+	unsigned int secno = GET_SEC_FROM_SEG(sbi, segno);
+	unsigned int start = GET_SEG_FROM_SEC(sbi, secno);
+	unsigned long long mtime = 0;
+	unsigned char age = 0;
+	unsigned char u;
+	unsigned int i;
+	unsigned short wcount;
+	unsigned int usable_segs_per_sec = f2fs_usable_segs_in_sec(sbi, segno);
+	
+	for (i = 0; i < usable_segs_per_sec; i++)
+		mtime += get_seg_entry(sbi, start + i)->mtime;
+		wcount += get_seg_entry(sbi, start + i)->wflag;
+
+	mtime = div_u64(mtime, usable_segs_per_sec);
+	wcount = div_u64(wcount, usable_segs_per_sec);
+
+	u = (wcount * 5 * 100) >> sbi->log_blocks_per_seg+2;//80%
+
+	/* Handle if the system time has changed by the user */
+	if (mtime < sit_i->min_mtime)
+		sit_i->min_mtime = mtime;
+	if (mtime > sit_i->max_mtime)
+		sit_i->max_mtime = mtime;
+	if (sit_i->max_mtime != sit_i->min_mtime)
+		age = 100 - div64_u64(100 * (mtime - sit_i->min_mtime),
+				sit_i->max_mtime - sit_i->min_mtime);
+
+	return UINT_MAX - ((100 * (100 - u) * age) / (100 + u));
+}
+
 static inline unsigned int get_ckpt_valid_blocks(struct f2fs_sb_info *sbi,
 				unsigned int segno, bool use_section)
 {
