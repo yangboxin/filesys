@@ -344,7 +344,7 @@ static inline unsigned int get_gc_cost(struct f2fs_sb_info *sbi,
 
 	/* alloc_mode == LFS */
 	if (p->gc_mode == GC_GREEDY)
-		return get_valid_blocks(sbi, segno, true);
+		return get_valid_time_blocks(sbi, segno);
 	else if (p->gc_mode == GC_CB)
 		return get_cb_cost(sbi, segno);
 
