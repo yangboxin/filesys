@@ -75,3 +75,31 @@ fsck.f2fs -l mirror.img
 可以看到blocksize、segment_count等元信息
 
 ![无标题](https://user-images.githubusercontent.com/55615299/181905867-bc1d2c9c-aa08-4d32-916d-ea92b14c21f0.png)
+
+# 7/28
+在对f2fs内核模块进行修改时，一般流程如下：
+在kernel_name/fs/f2fs中
+执行make命令，编译f2fs模块
+insmod f2fs.ko 载入f2fs模块
+下载格式化工具
+格式化并挂载
+
+修改代码
+举一个简单的用例，我们在f2fs文件夹的debug.c文件中的stat_show函数中，添加如下代码：
+
+seq_printf(s,"(OverProv:%d Resv:%d)]\n\n",si->overp_segs, si->rsvd_segs);
+
+seq_printf(s,"\nMy test:hello world \n");
+
+seq_printf(s,"Utilization: %d%% (%d valid blocks)\n",si->utilization,si->valid_count);
+
+1、在该文件目录中make （编译f2fs文件系统）
+
+2、umount /dev/sdb1（卸载原来的f2fs文件系统，如没有挂载则不需要执行）
+
+3、rmmodf2fs.ko （卸载f2fs.ko模块，如没有载入该模块则不需要执行）
+
+4、按上面所说再次载入f2fs.ko模块，挂载文件系统。
+
+5、执行cat/sys/kernel/debug/f2fs/status，可以查看是否多了我们添加的内容。
+
