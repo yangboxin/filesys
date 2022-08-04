@@ -2253,6 +2253,7 @@ static void update_segment_mtime(struct f2fs_sb_info *sbi, block_t blkaddr,
 
 	if (ctime > SIT_I(sbi)->max_mtime)
 		SIT_I(sbi)->max_mtime = ctime;
+	se->wflag=true;
 }
 
 static void update_sit_entry(struct f2fs_sb_info *sbi, block_t blkaddr, int del)

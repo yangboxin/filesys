@@ -371,13 +371,14 @@ static inline unsigned int get_valid_time_blocks(struct f2fs_sb_info *sbi,
 	unsigned int i;
 	unsigned short wcount;
 	unsigned int usable_segs_per_sec = f2fs_usable_segs_in_sec(sbi, segno);
+	unsigned int usable_blks_per_seg = f2fs_usable_blks_in_seg(sbi, segno);
 	
-	for (i = 0; i < usable_segs_per_sec; i++)
+	for (i = 0; i < usable_segs_per_sec; i++){
 		mtime += get_seg_entry(sbi, start + i)->mtime;
 		wcount += get_seg_entry(sbi, start + i)->wflag;
-
+	}
 	mtime = div_u64(mtime, usable_segs_per_sec);
-	wcount = div_u64(wcount, usable_segs_per_sec)*div_u64(get_valid_blocks(sbi,segno,true));
+	wcount = div_u64(wcount, usable_segs_per_sec)*div_u64(get_valid_blocks(sbi,segno,true),usable_blks_per_seg);
 
 	u = (wcount * 5 * 100) >> sbi->log_blocks_per_seg+2;//80%
 
